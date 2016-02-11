@@ -19,8 +19,8 @@ for line in sys.stdin:
     
     # pass along iterations, incrementing by one
     if node == 'Iters':
-        iters = int(vals)
-        sys.stdout.write('Iters\t%d' %iters)
+        sys.stdout.write(line)
+
 
     # if not iteration key, must be a node
     else:
@@ -36,8 +36,11 @@ for line in sys.stdin:
         #prev_rank = lst[1]
         adj_nodes = lst[2:]
         
-        # no adj_list is handled by reduce
-
+        # nodes with no adj_list is handled by reduce
+        '''
+        if node not in contribs:
+            contribs[node[7:]] = 0.0
+        '''
         for link in adj_nodes:
             # only occurs when len(adj_nodes) > 0
             new_rank = float(curr_rank) / len(adj_nodes)

@@ -36,7 +36,7 @@ for line in sys.stdin:
         #prev_rank = lst[1]
         adj_nodes = lst[2:]
         
-        # no adj_list is handled by reduce
+        # nodes with no adj_list is handled by reduce
 
         for link in adj_nodes:
             # only occurs when len(adj_nodes) > 0

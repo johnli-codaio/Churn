@@ -21,6 +21,8 @@ for line in sys.stdin:
 
     if vals[:3] == 'Adj':
         adjList[key] = vals[3:]
+        if key not in contribs:
+            contribs[key] = 0.0
     # else must be Rnk
     else:
         assert(vals[:3] == 'Rnk') #error checking, remove for production

@@ -1,6 +1,10 @@
 import os
 from tqdm import *
+import sys
+
 MAX_ITER = 25
+if len(sys.argv) > 1:
+    MAX_ITER = int(sys.argv[1])
 
 #os.system("cp EmailEnron email_input.txt")
 #os.system("cp GNPn100p05  email_input.txt")
