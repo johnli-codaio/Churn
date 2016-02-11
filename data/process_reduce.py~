@@ -26,6 +26,12 @@ for line in sys.stdin:
         for rank, node in top:
             sys.stdout.write('FinalRank:%f\t%d\n' %(rank, node))
     if not is_done:
-        sys.stdout.write(line)
+        res = line.split('\t')
+        key = res[0]
+        vals = res[1].split(',')
+
+
+        else:
+            sys.stdout.write(line)
 
 
