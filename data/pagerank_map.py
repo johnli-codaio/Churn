@@ -12,6 +12,8 @@ def isInt(s):
         return False
 
 
+rank_dic = {}
+
 # parses the raw input
 for line in sys.stdin:
     res = line.split('\t')
@@ -62,14 +64,20 @@ for line in sys.stdin:
         # emit the amount of rank a node contributes to a neighbor,
         # the current iteration,
         # and remember this node
-
-        # "adjNode \t iter,newRank,currentNode"
-        result = str(link).rstrip() + ",rank" + "," + str(curr_rank) + "\t" + str(which_iter) + "," \
-            + str(new_rank) + ","\
-            + str(node[7:]) + "\n"
-        sys.stdout.write(result)
-
-
+        
+        nbr = str(link).rstrip()
+        parent = node[7:]
+        if (nbr, curr_rank) in rank_dic:
+            rank_dic[(nbr, curr_rank)][0] += new_rank
+        else:
+            rank_dic[(nbr, curr_rank)] = [new_rank, which_iter, parent]
+            
+        ## "adjNode \t iter,newRank,currentNode"
+        #result = str(link).rstrip() + ",rank" + "," + str(curr_rank) + "\t" + str(which_iter) + "," \
+        #    + str(new_rank) + ","\
+        #    + str(node[7:]) + "\n"
+        #sys.stdout.write(result)
+    
         # its to-be previous rank
     #result2 = str(node[7:]).rstrip() + "\t" + str(curr_rank) + "\n"
     # sys.stdout.write(result2)
@@ -86,7 +94,15 @@ for line in sys.stdin:
     #result2 = str(node[7:]).rstrip() + "\t" + str(curr_rank) + "\n"
     #sys.stdout.write(result2)
 
-
+for key in rank_dic:
+    nbr, curr_rank = key
+    new_rank = rank_dic[key][0]
+    which_iter = rank_dic[key][1]
+    parent = rank_dic[key][2]
+    result = str(nbr) + ",rank" + "," + str(curr_rank) + "\t" + str(which_iter) + "," \
+                + str(new_rank) + ","\
+                + str(parent) + "\n"
+    sys.stdout.write(result)    
 
 # dict = {}
 # for line in sys.stdin:
