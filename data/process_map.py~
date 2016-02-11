@@ -44,7 +44,7 @@ if isDone:
     sys.stdout.write('Done:\t%s' %','.join(['%s %s' %(str(rank), str(node)) \
                                                 for rank, node in top]))
 else:
-    sys.stdout.write('Iters\t%d' %which_iter)
+    sys.stdout.write('Iters\t%d\n' %which_iter)
     for line in data:
         sys.stdout.write(line)
 

@@ -10,7 +10,7 @@ import sys
 
 
 # keeps track fo the top 20's scores and which nodes
-lst = []
+
 
 is_done = False
 

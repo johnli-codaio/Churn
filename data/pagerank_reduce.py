@@ -25,7 +25,7 @@ for line in sys.stdin:
             contribs[key] = 0.0
     # else must be Rnk
     else:
-        assert(vals[:3] == 'Rnk') #error checking, remove for production
+        #assert(vals[:3] == 'Rnk') #error checking, remove for production
         
         # skip last char cause it will be \n
         contribs[key] = contribs.get(key, 0.0) + float(vals[3:-1])

@@ -23,14 +23,13 @@ for line in sys.stdin:
     lst = val.split(',')
     
 
-    curr_rank = lst[0]
+    curr_rank = float(lst[0])
     if len(top) < 20:
-        heapq.heappush(top, (float(curr_rank), node))
-        '''sys.stdout.write('A:' + str(node) \
-                + '\t' + str(curr_rank) + '\n')'''
-    elif float(curr_rank) > top[0][0]:
+        heapq.heappush(top, (curr_rank, node))
+
+    elif curr_rank > top[0][0]:
         heapq.heappop(top)
-        heapq.heappush(top, (float(curr_rank), node))
+        heapq.heappush(top, (curr_rank, node))
     data.append(line)
 
 # stopping condition 

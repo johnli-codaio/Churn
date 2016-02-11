@@ -1,15 +1,9 @@
 #!/usr/bin/env python
 
 import sys
-import numpy
 
 
-def isInt(s):
-    try:
-        int(s)
-        return True
-    except ValueError:
-        return False
+
 # dictionary of contributions to nodes
 contribs = {}
 
@@ -46,6 +40,7 @@ for line in sys.stdin:
         if len(adj_nodes) > 0:
             # note that vals already has newline in it
             sys.stdout.write('%s\tAdj%s\n' %(node[7:], curr_rank + ',' + ','.join(adj_nodes)))
+
 for key in contribs:
     sys.stdout.write('%s\tRnk%f\n' %(key, contribs[key]))
 
