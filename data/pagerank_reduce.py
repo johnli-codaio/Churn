@@ -22,12 +22,13 @@ curr_iter = 0
 for line in sys.stdin:
 
     res = line.split('\t')
-    nodeVals = res[0].split(',') # nodeVals are in the form (NodeID, "list/rank")
+    nodeVals = res[0].split(',') # nodeVals are in the form (NodeID, "list/rank", currRank, currIter)
     node = nodeVals[0]
     representation = nodeVals[1]
     currRank = nodeVals[2]
+    curr_iter = nodeVals[3]
 
-    value = res[1].split(',') # Values are either: (iter, rank, currNode)
+    value = res[1].split(',') # Values are either: (rank, currNode)
                               # Or                 (prevRank)
                               # Or                 ([adjList])
     #if(len(value) > 1):
@@ -55,9 +56,8 @@ for line in sys.stdin:
         adj_list = ""
 
     if(representation == "rank"):
-        curr_iter = int(value[0])
-        contrib = float(value[1])
-        contrib_by = (value[2]).rstrip()
+        contrib = float(value[0])
+        contrib_by = (value[1]).rstrip()
         rank += float(contrib)
         key = node
 
