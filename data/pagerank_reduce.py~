@@ -20,7 +20,7 @@ for line in sys.stdin:
         continue
 
     if vals[:3] == 'Adj':
-        adjList[key] = vals[3:]
+        adjList[key] = vals
     # else must be Rnk
     else:
         assert(vals[:3] == 'Rnk') #error checking, remove for production
@@ -30,13 +30,12 @@ for line in sys.stdin:
 
 for node in contribs:
     if node not in adjList:
-        adjList[node] = ('1.0,%s\n' %node)
+        adjList[node] = ('1.0,%s' %node)
         contribs[node] += 1
 
     # alpha hard coded for optimization
     newRank = .15 + .85 * contribs[node]
-    # note that adjacency list contains \n 
-    sys.stdout.write('NodeId:%s\t%f,%s' %(node, newRank, adjList[node]))
+    sys.stdout.write('NodeId:%s\t%f,%s\n' %(node, newRank, adjList[node]))
 
     
 

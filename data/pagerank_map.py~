@@ -19,8 +19,8 @@ for line in sys.stdin:
     
     # pass along iterations, incrementing by one
     if node == 'Iters':
-        sys.stdout.write(line)
-
+        iters = int(vals)
+        sys.stdout.write('Iters\t%d' %iters)
 
     # if not iteration key, must be a node
     else:
