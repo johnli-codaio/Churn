@@ -12,6 +12,8 @@ def collect(fInNames, fOutNames, num):
     for fIn in fInNames:
         with open(fIn, 'r') as lines:
             for line in lines:
+                if line[-1] != '\n':
+                    line += '\n'
                 key, val = line.split('\t')
                 dic[key] = dic.get(key, []) + [line]
 
