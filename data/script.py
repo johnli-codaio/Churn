@@ -1,6 +1,7 @@
 import os
 from tqdm import *
 MAX_ITER = 25
+
 #os.system("cp EmailEnron email_input.txt")
 #os.system("cp GNPn100p05  email_input.txt")
 os.system('cp Wiki email_input.txt')

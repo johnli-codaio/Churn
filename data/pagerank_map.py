@@ -64,8 +64,8 @@ for line in sys.stdin:
         # and remember this node
 
         # "adjNode \t iter,newRank,currentNode"
-        result = str(link).rstrip() + ",rank" + "," + str(curr_rank) + "\t" + str(which_iter) + "," \
-            + str(new_rank) + ","\
+        result = str(link).rstrip() + ",rank" + "," + str(curr_rank) + "," + str(which_iter) \
+            + "\t" + str(new_rank) + ","\
             + str(node[7:]) + "\n"
         sys.stdout.write(result)
 
@@ -75,11 +75,12 @@ for line in sys.stdin:
     # sys.stdout.write(result2)
 
     if(len(adj_nodes) != 0):
-        adjResult = str(node[7:]).rstrip() + ",list" + "," + str(curr_rank) + "\t" \
-                     + ",".join(adj_nodes)
+        adjResult = str(node[7:]).rstrip() + ",list" + "," + str(curr_rank) + "," + str(which_iter) \
+                     + "\t" + ",".join(adj_nodes)
         sys.stdout.write(adjResult)
     else:
-        adjResult = str(node[7:]).rstrip() + ",list" + "," + str(curr_rank) + "\t\n"
+        adjResult = str(node[7:]).rstrip() + ",list" + "," + str(curr_rank) + "," + str(which_iter) \
+                     + "\t\n"
         sys.stdout.write(adjResult)
     # its to-be previous rank
     #"currentNode \t currRank"
