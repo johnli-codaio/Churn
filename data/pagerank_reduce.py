@@ -48,6 +48,8 @@ for line in sys.stdin:
         # of each node's contribution to an element by alpha
         if adj_list == "":
             adj_list = '\n'
+            rank += 1 # Only occurs initially, with no node entry.
+            
         rank = alpha * (rank) + (1 - alpha)
         sys.stdout.write("NodeId:" + key +\
                         "\t" + str(curr_iter) + "," +\
