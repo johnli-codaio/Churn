@@ -45,6 +45,8 @@ for line in sys.stdin:
         # the second term contributes 1-alpha to every element in the vector
         # of pi, and the first term just multiplies the sum
         # of each node's contribution to an element by alpha
+        if adj_list == "":
+            adj_list = '\n'
         rank = alpha * (rank) + (1 - alpha)
         sys.stdout.write("NodeId:" + key +\
                         "\t" + str(curr_iter) + "," +\
