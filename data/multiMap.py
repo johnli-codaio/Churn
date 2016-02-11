@@ -6,6 +6,25 @@ from tqdm import *
 MAX_ITER = 50
 machines = 10
 
+
+def divide(fInNames, fOutNames, num):
+
+    data = []
+    for fIn in fInNames:
+        with open(fIn, 'r') as lines:
+            for line in lines:
+                data.append(line)
+
+    idx = 0
+    split = len(data) / num
+    fOuts = [open(fOutName, 'w') for fOutName in fOutNames]
+    for line in data:
+        try:
+            fOuts[min(idx / split, num - 1)].write(line)
+        except:
+            print('error: idx=%d, split=%d' %(idx, split))
+            raise
+
 def collect(fInNames, fOutNames, num):
 
     dic = {}
@@ -57,7 +76,7 @@ os.system('cp %s %s' %(fIn, input))
 
 start = time.time()
 for iter in tqdm(range(MAX_ITER)):
-    collect([input], pagerankInput, machines)
+    divide([input], pagerankInput, machines)
     for i in range(machines):
         os.system('python pagerank_map.py < %s > %s' %(pagerankInput[i], pagerankMapOut[i]))
 
@@ -67,7 +86,7 @@ for iter in tqdm(range(MAX_ITER)):
     for i in range(machines):
         os.system('python pagerank_reduce.py < %s > %s' %(pagerankReduce[i], pagerankReduceOut[i]))
 
-    collect(pagerankReduceOut, [processInput], 1)
+    divide(pagerankReduceOut, [processInput], 1)
     
     # process_map
     os.system('python process_map.py < %s > %s' %(processInput, processReduce))
