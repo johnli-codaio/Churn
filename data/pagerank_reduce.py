@@ -10,6 +10,41 @@ import sys
 #       everything. Things passed in are still individual
 #       key,value pairs, and values are not concatenated.
 
+
+contribs = {}
+adjList = {}
+for line in sys.stdin:
+    key, vals = line.split('\t')
+    if key == 'Iters':
+        sys.stdout.write(line)
+        continue
+
+    if vals[:3] == 'Adj':
+        adjList[key] = vals[3:]
+        if key not in contribs:
+            contribs[key] = 0.0
+    # else must be Rnk
+    else:
+        #assert(vals[:3] == 'Rnk') #error checking, remove for production
+        
+        # skip last char cause it will be \n
+        contribs[key] = contribs.get(key, 0.0) + float(vals[3:-1])
+
+for node in contribs:
+    if node not in adjList:
+        adjList[node] = ('1.0,%s\n' %node)
+        contribs[node] += 1
+
+    # alpha hard coded for optimization
+    newRank = .15 + .85 * contribs[node]
+    # note that adjacency list contains \n 
+    sys.stdout.write('NodeId:%s\t%f,%s' %(node, newRank, adjList[node]))
+
+    
+
+        
+'''
+
 alpha = 0.85
 # this reducer's particular key, since 
 # keys are grouped into contiguous blocks
@@ -85,4 +120,5 @@ sys.stdout.write("NodeId:" + key +\
 # reset rank, adj_list
 rank = 0.0
 adj_list = []
+'''
 
