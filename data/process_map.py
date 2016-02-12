@@ -7,6 +7,7 @@ import heapq
 #
 
 MAX_ITER = 50
+
 # remembers the top 20 scores
 top = []
 data = []
@@ -19,11 +20,11 @@ for line in sys.stdin:
         which_iter = int(val) + 1
         continue
     node = key[7:]
-    
-    lst = val.split(',')
-    
 
-    curr_rank = float(lst[0])
+    lst = val.split(',')
+
+
+    curr_rank = int(lst[1])
     if len(top) < 20:
         heapq.heappush(top, (curr_rank, node))
 
@@ -32,7 +33,7 @@ for line in sys.stdin:
         heapq.heappush(top, (curr_rank, node))
     data.append(line)
 
-# stopping condition 
+# stopping condition
 if which_iter >= MAX_ITER:
     isDone = True
 

@@ -7,8 +7,8 @@ if len(sys.argv) > 1:
     MAX_ITER = int(sys.argv[1])
 
 #os.system("cp EmailEnron email_input.txt")
-#os.system("cp GNPn100p05  email_input.txt")
-os.system('cp Wiki email_input.txt')
+os.system("cp GNPn100p05  email_input.txt")
+# os.system('cp Wiki email_input.txt')
 start = time.time()
 for i in tqdm(range(MAX_ITER)):
     os.system("python pagerank_map.py < email_input.txt | sort | python "

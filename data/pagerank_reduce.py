@@ -6,15 +6,20 @@ import sys
 # This program simply represents the identity function.
 #
 
-# Note: This reduce function does not concatenate 
+# Note: This reduce function does not concatenate
 #       everything. Things passed in are still individual
 #       key,value pairs, and values are not concatenated.
-
 
 contribs = {}
 adjList = {}
 for line in sys.stdin:
-    key, vals = line.split('\t')
+    tmp = line.split('\t')
+    key = tmp[0]
+    vals = tmp[1]
+    count = "0"
+    if len(tmp) > 2:
+        count = tmp[2].rstrip()
+
     if key == 'Iters':
         sys.stdout.write(line)
         continue
@@ -22,31 +27,37 @@ for line in sys.stdin:
     if vals[:3] == 'Adj':
         adjList[key] = vals[3:]
         if key not in contribs:
-            contribs[key] = 0.0
+            contribs[key] = [0,0]
+        contribs[key][1] += int(count)
     # else must be Rnk
     else:
         #assert(vals[:3] == 'Rnk') #error checking, remove for production
-        
+
         # skip last char cause it will be \n
-        contribs[key] = contribs.get(key, 0.0) + float(vals[3:-1])
+        # contribs[key] = contribs.get(key, 0.0) + float(vals[3:-1])
+        res = vals[3:].split(',')
+        if key not in contribs:
+            contribs[key] = [0,0]
+        contribs[key][0] += int(res[0])
+        contribs[key][1] += int(res[0])
+
 
 for node in contribs:
     if node not in adjList:
-        adjList[node] = ('1.0,%s\n' %node)
-        contribs[node] += 1
+        adjList[node] = ('%s' %node)
+    #     adjList[node] = ('1.0,%s\n' %node)
+    #     contribs[node] += 1
 
-    # alpha hard coded for optimization
-    newRank = .15 + .85 * contribs[node]
-    # note that adjacency list contains \n 
-    sys.stdout.write('NodeId:%s\t%f,%s' %(node, newRank, adjList[node]))
+    sys.stdout.write('NodeId:%s\t%d,%d,%s\n'
+            %(node, contribs[node][0],contribs[node][1],adjList[node]))
 
-    
 
-        
+
+
 '''
 
 alpha = 0.85
-# this reducer's particular key, since 
+# this reducer's particular key, since
 # keys are grouped into contiguous blocks
 key = ""
 rank = 0.0

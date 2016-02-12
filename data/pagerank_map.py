@@ -1,16 +1,29 @@
 #!/usr/bin/env python
 
 import sys
+import random
 
 
+def isInt(s):
+    try:
+        int(s)
+        return True
+    except ValueError:
+        return False
 
-# dictionary of contributions to nodes
-contribs = {}
+alpha = 0.85
+
+num_walk = 500
+
+def travel(prob):
+    tmp = random.random()
+    if tmp < prob: return True
+    return False
 
 # parse all raw input first
 for line in sys.stdin:
     node, vals = line.split('\t')
-    
+
     # pass along iterations, incrementing by one
     if node == 'Iters':
         sys.stdout.write(line)
@@ -23,26 +36,34 @@ for line in sys.stdin:
         # Second index is the previous rank.
         # Remaining are integers, correspong to
         # Node ID's.
-        
+
         # note we remove the last char of vals, so no newline
         lst = vals[:-1].split(',')
-        curr_rank = lst[0]
-        #prev_rank = lst[1]
+
+        coupons = num_walk
+        num_walks = num_walk
+        if isInt(lst[0]) and isInt(lst[1]):
+            coupons = int(lst[0])
+            num_walks = int(lst[1])
+
         adj_nodes = lst[2:]
-        
-        # nodes with no adj_list is handled by reduce
 
-        for link in adj_nodes:
-            # only occurs when len(adj_nodes) > 0
-            new_rank = float(curr_rank) / len(adj_nodes)
+        d = {}
+        if coupons > 0:
+            walks_to_link = 0
+            for i in range(coupons):
+                if travel(alpha) and len(adj_nodes) > 0:
+                    # pick a random neighbor
+                    neighbor = random.sample(adj_nodes, 1)[0]
+                    d[neighbor] = d.get(neighbor, 0) + 1
 
-            contribs[link] = contribs.get(link, 0.0) + new_rank
+        for key, value in d.iteritems():
+            sys.stdout.write('%s\tRnk%s\n' %(key, str(value)) )
+
         if len(adj_nodes) > 0:
             # note that vals already has newline in it
-            sys.stdout.write('%s\tAdj%s\n' %(node[7:], curr_rank + ',' + ','.join(adj_nodes)))
+            sys.stdout.write('%s\tAdj%s\t%d\n' %(node[7:], ','.join(adj_nodes), num_walks))
 
-for key in contribs:
-    sys.stdout.write('%s\tRnk%f\n' %(key, contribs[key]))
 
 # output is always node number
 # tab
@@ -61,7 +82,7 @@ for line in sys.stdin:
     node = res[0]
 
     # DATA SPLICING:
-    # First index is the current rank. 
+    # First index is the current rank.
     # Second index is the previous rank.
     # Remaining are integers, corresponding to
     # Node ID's.
@@ -70,7 +91,7 @@ for line in sys.stdin:
     lst = res[1].split(',')
 
     which_iter = 1
-    
+
 
     # AFTER ONE ITERATIONS
     # First index: iteration number (integer)
