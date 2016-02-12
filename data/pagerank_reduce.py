@@ -9,7 +9,7 @@ import sys
 # Note: This reduce function does not concatenate 
 #       everything. Things passed in are still individual
 #       key,value pairs, and values are not concatenated.
-'''
+
 curr_node = ''
 adjList = ''
 newRank = 0.0
@@ -86,7 +86,7 @@ for node in contribs:
     newRank = .15 + .85 * contribs[node]
     # note that adjacency list contains \n 
     sys.stdout.write('NodeId:%s\t%f,%s' %(node, newRank, adjList[node]))
- 
+'''
 
         
 '''
