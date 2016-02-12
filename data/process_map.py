@@ -1,7 +1,12 @@
 #!/usr/bin/env python
 
 import sys
-import heapq
+#import heapq
+
+
+for line in sys.stdin:
+    sys.stdout.write(line)
+'''
 #
 # This program simply represents the identity function.
 #
@@ -22,7 +27,6 @@ for line in sys.stdin:
     
     lst = val.split(',')
     
-
     curr_rank = float(lst[0])
     if len(top) < 20:
         heapq.heappush(top, (curr_rank, node))
@@ -47,5 +51,5 @@ else:
     for line in data:
         sys.stdout.write(line)
 
-
+'''
 
