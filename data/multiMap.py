@@ -70,7 +70,9 @@ pagerankInput = ['testing/pagerankInput' + str(i) for i in range(machines)]
 pagerankMapOut = ['testing/pagerankMapOut' + str(i) for i in range(machines)]
 pagerankReduce = ['testing/pagerankReduce' + str(i) for i in range(machines)]
 pagerankReduceOut = ['testing/pagerankReduceOut' + str(i) for i in range(machines)]
-processInput = 'testing/processInput'
+procMaps = 2
+processInput = ['testing/processInput' + str(i) for i in range(procMaps)]
+processMapOut = ['testing/processMapOut' + str(i) for i in range(procMaps)]
 processReduce = 'testing/processReduce'
 
 os.system('cp %s %s' %(fIn, input))
@@ -88,11 +90,13 @@ for iter in tqdm(range(MAX_ITER)):
     for i in range(machines):
         os.system('python pagerank_reduce.py < %s > %s' %(pagerankReduce[i], pagerankReduceOut[i]))
 
-    divide(pagerankReduceOut, [processInput], 1)
+    divide(pagerankReduceOut, processInput, procMaps)
     
     # process_map
-    os.system('python process_map.py < %s > %s' %(processInput, processReduce))
+    for i in range(procMaps):
+        os.system('python process_map.py < %s > %s' %(processInput[i], processMapOut[i]))
 
+    collect(processMapOut, [processReduce], 1)
     # process_reduce
     os.system('python process_reduce.py < %s > %s' %(processReduce, input))
 
