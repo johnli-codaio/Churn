@@ -23,7 +23,7 @@ for line in sys.stdin:
         # Second index is the previous rank.
         # Remaining are integers, correspong to
         # Node ID's.
-        
+        assert vals[-1] == '\n'
         # note we remove the last char of vals, so no newline
         lst = vals[:-1].split(',')
         curr_rank = lst[0]

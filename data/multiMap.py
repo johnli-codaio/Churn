@@ -78,31 +78,41 @@ processReduce = 'testing/processReduce'
 os.system('cp %s %s' %(fIn, input))
 
 
+times = [0.0] * 4
 start = time.time()
 for iter in tqdm(range(MAX_ITER)):
     divide([input], pagerankInput, machines)
+
+    s = time.time()
     for i in range(machines):
         os.system('python pagerank_map.py < %s > %s' %(pagerankInput[i], pagerankMapOut[i]))
-
+    times[0] += (time.time() - s) / machines
 
     # pagerank_reduce
     collect(pagerankMapOut, pagerankReduce, machines)
+
+    s = time.time()
     for i in range(machines):
         os.system('python pagerank_reduce.py < %s > %s' %(pagerankReduce[i], pagerankReduceOut[i]))
+    times[1] += (time.time() - s) / machines
 
     divide(pagerankReduceOut, processInput, procMaps)
     
     # process_map
+    s = time.time()
     for i in range(procMaps):
         os.system('python process_map.py < %s > %s' %(processInput[i], processMapOut[i]))
+    times[2] += (time.time() - s) / procMaps
 
     collect(processMapOut, [processReduce], 1)
     # process_reduce
+    s = time.time()
     os.system('python process_reduce.py < %s > %s' %(processReduce, input))
+    times[3] += time.time() - s
 
+print('pagerank_map: %f\npagerank_reduce: %f\nprocess_map %f\nprocess_reduce: %f\n' %(times[0], times[1], times[2], times[3]))
 print('%f Seconds' %(time.time() - start))
 
 
     
-
 
