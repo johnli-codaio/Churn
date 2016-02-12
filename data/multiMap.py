@@ -111,7 +111,7 @@ for iter in tqdm(range(MAX_ITER)):
     times[3] += time.time() - s
 
 print('pagerank_map: %f\npagerank_reduce: %f\nprocess_map %f\nprocess_reduce: %f\n' %(times[0], times[1], times[2], times[3]))
-print('%f Seconds' %(time.time() - start))
+print('%s %f Seconds' %(fIn, time.time() - start))
 
 
     
