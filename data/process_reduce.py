@@ -17,10 +17,16 @@ isDone = False
 which_iter = 1
 
 for line in sys.stdin:
-    key, val = line.split('\t')
-    if key == 'Iters':
+    #dis shit slow
+    #key, val = line.split('\t')
+    #if key == 'Iters':
+    #    which_iter = int(val) + 1
+    #    continue 
+
+    if line[:5] == 'Iters':
+        key, val = line.split('\t')
         which_iter = int(val) + 1
-        continue    
+        continue
     data.append(line)
     
 # stopping condition 
