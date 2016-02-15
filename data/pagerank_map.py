@@ -38,7 +38,7 @@ for line in sys.stdin:
 
             contribs[link] = contribs.get(link, 0.0) + new_rank
         if len(adj_nodes) > 0:
-            # note that vals already has newline in it
+
             sys.stdout.write('%s\tAdj%s\n' %(node[7:], curr_rank + ',' + ','.join(adj_nodes)))
 
 for key in contribs:
