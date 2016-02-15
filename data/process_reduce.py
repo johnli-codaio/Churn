@@ -8,7 +8,7 @@ import heapq
 #
 
 
-MAX_ITER = 50
+MAX_ITER = 10
 # remembers the top 20 scores
 top = []
 data = []

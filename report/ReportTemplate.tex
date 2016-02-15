@@ -29,6 +29,43 @@ Rankmaniac Report
 \normalsize
 \medskip
 
+\section{Overview}
+During this RankManiac project, our group ``churn'' implemented PageRank on the given network via Map Reduce through Hadoop on Amazon AWS Clusters. Two sample datasets, ``GNPn100p05'' and ``EmailEnron'', were distributed to us for the purpose of local testing. Our Rankmaniac score was determined by our PageRank's elapsed time and the correctness on a larger, hidden dataset on these Amazon AWS clusters. This report's purpose is to illustrate the process for our implementation of PageRank.
+
+\section{Initial Framework}
+\subsection*{Development}
+The data that was given to us was in the form: 
+{
+\begin{center}
+NodeId:[NODEID] \hspace{4mm} [CURRENT\_RANK],[PREVIOUS\_RANK],[ADJACENCY\_LIST]
+\end{center}
+}
+\noindent After a basic understanding of the structure of the project, our initial framework of MapReduce was as follows:
+    \begin{itemize}
+        \item \textsc{PageRank\_Map}: \\
+        The input of this mapping will either be in the above format, or the output of \textsc{Process\_Reduce}, which prepends a [ITERATION] value in front of the current values. This mapping function will take in the key/value pair, increment [ITERATION] by 1, and 
+        \item \textsc{PageRank\_Reduce}: 
+        \item \textsc{Process\_Map}:
+        \item \textsc{Process\_Reduce}:
+    \end{itemize}
+
+\subsection*{Problems}
+
+\section{Refactored Framework}
+\subsection*{Refactoring}
+ % Talk about results in here too.
+
+\subsection*{Optimizations}
+ % Talk about results in here too (15 iterations instead of 50)
+ % (Low level stuff).
+
+\section{Testing}
+ % Can talk about data mining. What scripts we used. etc.
+
+\section{Contributions}
+ % Should be on FB chat.
+ 
+\section{References}
 %\section{Overview}
 %In this section, please write an overview of the project. You should include the %work distribution of each team member, any challenges you encountered, and how you %overcame those challenges to achieve your final performance.
 
