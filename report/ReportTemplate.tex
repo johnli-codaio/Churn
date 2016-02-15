@@ -130,16 +130,70 @@ NodeId:[NODEID] \hspace{8mm} [CURRENT\_RANK],[PREVIOUS\_RANK],[ADJACENCY\_LIST]
 %\section{Data Manipulation}
 %If you did any data pre-processing, such as scaling or normalization,  please %briefly explain the method you used and the rationale for doing so.
 
-%\section{Algorithm}
-%\begin{enumerate}
-%\item Briefly introduce all the algorithms you tried to implement
-%\item Elaborate on the specifics of each algorithm you implemented, and the performance achieved.
+\section{Other Algorithms/Attempts}
+\begin{enumerate}
+\item One algorithm that was attempted was using a Monte Carlo random walk simulation
+to determine pagerank, described in a paper written by Sarma et al \cite{sarma2013fast}. 
+The basic idea is, at each node,
+start with a fixed number of random walks, $K$. At each iteration, the random 
+walks have a probability of $\alpha$ of taking a directed step to one neighbor,
+and probability $1-\alpha$ of terminating. Each node would then keep track of
+the number of walks walking into it. The final pagerank calculation would be output
+as the number of walks visiting a node, divided by factor proportional
+to the size of the graph. 
+    \subitem \textbf{Initial Thoughts} This algorithm appeared as a viable optimization
+    over calculating pagerank through the transition matrix due to the initial fixed 
+    number of walks. The expected stopping time of a walk is $\frac{1}{\alpha}$, so
+    the number of walks present monotonically decreases over iterations, and therefore
+    the computation will gradually speed up (and in fact, this is what we saw 
+    in our implementation). Additionally, it could serve well in graphs with a 
+    heavy-tailed distribution; since nodes with a higher in-degree node 
+    are likely to receive more random walks, it would suffice to start with only
+    a small number of walks at each node, since we would expect that the Monte Carlo
+    simulation would aggregate a majority of the walks at nodes that are on the 
+    right side of a heavy-tail degree distribution. 
+    \subitem \textbf{Implementation and Results} This algorithm didn't appear so great,
+    at least for small graphs (e.g., the sample sets GNP and EmailEnron). Results
+    only approximated the top 20 rankings for large initial random walks $K$,  
+    If $K$ was too small, then there would be several nodes all with the same
+    pagerank value - this appears especially problematic with the GNP dataset, 
+    since for the true pagerank values of the top 20, 19 of them contain
+    pagerank values that are within 1 of each other. Thus, since $K$ was so large,
+    it took longer to run than our machine-level optimized transition-matrix computation,
+    though we did notice that iterations sped up over time. Perhaps the results would be different if we included
+    the same optimizations in the Monte Carlo simulation, but since our naive implementation
+    had not been working until the near end of the week, we spent the remaining time
+    debugging and testing that implementation, and thus
+    this project yielded inconclusive results. 
+    \subitem \textbf{Other Considerations} The paper also considered an improved version
+    of the Monte Carlo method, but it would only hold for undirected graphs. This was not attempted,
+    since early on in the week it was discovered that uploading a program which assumed graphs
+    were undirected yielded results with high penalty.
+    
+\item The second optimization that was attempted was also using a design pattern
+written in a paper by Lin and Schatz \cite{lin2010design}. In the paper, the authors
+describe a concept known as "Schimmy" to take advantage of the parallel mappers and reducers. 
+This algorithm would partition the existing graph into the same number of partitions 
+as the number of reducers; thus, every reducer would only operate on the same nodes. 
+This would prevent the need to emit the entire graph structure within each iteration,
+as the reducers would know which nodes to update.
+    \subitem \textbf{Thoughts} This would require that the reducers somehow have
+    access to the graph structure without obtaining it from the input data. Thus, 
+    it would be impossible to completely implement Schimmy, but one possible idea 
+    that was thought of was to emit a partition of nodes as a single line. This 
+    allows the number of read/writes between mapper and reducer to just be a fixed
+    constant, which dramatically reduces traffic in the intermediate data between
+    mapper and reducer. However, this would also require that the graph
+    partition be sent to the reducer before any of the pairs containing updated ranks
+    be sent. This would only occur if the values are also sorted in the intermediate step
+    (since the keys could only be used to identify each reducer), so it
+    was unclear if this was a viable optimization.
 %\begin{enumerate}
 %\item algorithm1
 %\item algorithm2
 %\item $\cdots$
 %\end{enumerate}
-%\end{enumerate}
+\end{enumerate}
 
 
 %\section{Model Selection}
