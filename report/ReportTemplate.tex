@@ -1,5 +1,9 @@
 \input{projectpreamble}
 
+\usepackage{biblatex}
+\addbibresource{sarma.bib}
+\addbibresource{lin.bib}
+
 \chead{%
   {\vbox{%
       \vspace{2mm}
@@ -117,9 +121,9 @@ NodeId:[NODEID] \hspace{8mm} [CURRENT\_RANK],[PREVIOUS\_RANK],[ADJACENCY\_LIST]
 
 \section{Refactored Framework}
 \subsection*{Refactoring}
-Unlike the previous framework, our refactored code did not deal with previous ranks and separated NodeId operations with Iterations. So, the inputs to the PageRank Map functions were either:
+Unlike the previous framework, our refactored code kept iterations in a separate key value pair.  So, the inputs to the PageRank Map functions were either:
 \begin{center}
-  NodeId:[NODEID] \hspace{8mm} [CURRENT\_RANK],[ADJACENCY\_LIST]
+  NodeId:[NODEID] \hspace{8mm} [CURRENT\_RANK],[PREVIOUS\_RANK],[ADJACENCY\_LIST]
 \end{center}
 or
 \begin{center}
@@ -131,7 +135,7 @@ Like the previous section, we will detail the refactored bits in each of the fou
   \item \textsc{PageRank\_Map}: \\
     As mentioned above, the problem here was that we made a poor mapping choice. Originally, our key values were [NODEID],[FLAG],[CURRENT\_RANK],[ITERATION], but we wanted all of our key/value pairs to be blocked based on NODEID only. Therefore, the key value pairs were changed to:
     \begin{center}
-      [NODEID] \hspace{8mm} [FLAG],[CURRENT\_RANK],[ADJACENCY\_LIST]
+      [NODEID] \hspace{8mm} [FLAG],[CURRENT\_RANK],[PREVIOUS\_RANK],[ADJACENCY\_LIST]
     \end{center}
     or
     \begin{center}
@@ -148,12 +152,14 @@ Like the previous section, we will detail the refactored bits in each of the fou
     The problem with out old framework was that we relied too much on sorting, and we were naive of Hadoop's intricacies for grouping. This issue was essentially fixed once we moved the [FLAG] and the [CURRENT\_RANK] into values and left [ITERATIONS] to be its own thing. Furthermore, we also used dictionaries to store adjacency lists, with they key being the current node. This was later optimized to string buffers, which will be explained lower.
     \\ \\
     We did notice, however, that some datasets that we mined did not include NodeId entries for nodes that did not have any outgoing edges. The given datasets that were given did include entries for no outgoing edges, but according to Piazza, there may also be cases where no entries exist for such nodes. In this case, we would simply just create a new key/value pair with that NodeId, so we would be essentially adding an entry.
+    \\\\
+    In addition, for nodes with no outgoing edges, and thus no adjacency list, we added a new an adjacency list to itself so that it would contribute completely to itself, by definition of pagerank. 
     \\ \\
     Just like PageRank Map, we do not deal with iterations here. We just pass them along.
 
     The output for this function is simply:
     \begin{center}
-      NodeId:[NODEID] \hspace{8mm} [CURRENT\_RANK],[ADJACENCY\_LIST]
+      NodeId:[NODEID] \hspace{8mm} [CURRENT\_RANK],[PREVIOUS\_RANK],[ADJACENCY\_LIST]
     \end{center}
     or
     \begin{center}
@@ -164,7 +170,7 @@ Like the previous section, we will detail the refactored bits in each of the fou
     Initially, our process map and our process reduce were relatively similar.Furthermore, we only wanted to process our data once, so we moved all of the processing to process reduce (we had a huge bug where we assumed only one process map, which wasn't always true on Hadoop). So, this function is simply the identity function: it passes its input as its output.
 
   \item \textsc{Process\_Reduce}: \\
-    This is the function that keeps track of the top 20 final rankings. This is also where the iteration key/value pairs are created or updated, incrementing the iteration number by 1 before passing it out. Like our initial process reduce, we would have a data structure holding the top 20 values, and the lowest rank gets replaced by higher ranks, and the data structure resorts itself.
+    This is the function that keeps track of the top 20 final rankings. This is also where the iteration key/value pairs are created or updated, incrementing the iteration number by 1 before passing it out. Like our initial process reduce, we would have a data structure holding the top 20 values in a priority heap, and the lowest rank gets replaced by higher ranks, and the data structure resorts itself.
     \\ \\
     Once the maximum number of iterations is hit, we simply print out Final Ranks.
 \end{itemize}
@@ -176,11 +182,13 @@ After this implementation, the refactored code worked for both single instances 
  % (Low level stuff).
 During the development of our refactored code, to avoid order reliance, we would use dictionaries to store most of our data. For example, we would store adjacency lists in a dictionary, with the key being the NodeId for that dictionary. However, once we began to understand the intricacies of Hadoop more, we transitioned from using dictionaries to using string buffers, as dictionaries take up a lot of space (for such a large dataset). This optimized space and time as well, especially for such a large dataset.
 \\ \\
+We used dictionaries to preliminarily collect PageRank contributions in pagerank\_map. This way, we would print far fewer lines in pagerank\_map, resulting in significant speedup.
+\\\\
 Other low level optimizations included hardcoding alpha values and unraveling some of the for loops from the initial framework, so that there would be a slight speedup in running the code.
 \\ \\
-Perhaps the largest optimization that we did was to account for the tradeoff between time and error. We noticed that each iteration took about 6 minutes to complete on the Amazon machines, so through the process of trial and error, we decided to try 15 iterations. This significantly slowed down the PageRank time, since the graph is so large, and the error produced by this optimization was very small (6 minutes). This is probably due to the fact that for a degree heavy-tailed distribution, most of the nodes we will be calculating PageRank for are sparse, and would not contribute much to the top 20 rankings. We leave 15 iterations, however, to account for some convergence of the top 20 rankings (our last upload used 10 iterations, and we found that the error was too high). Even though there will be error present, the tradeoff between error and time significantly favors time minimization as the number iterations increases, since error rapidly decreases as more iterations are done.
+Perhaps the largest optimization that we did was to account for the tradeoff between time and error. We noticed that each iteration took about 6 minutes to complete on the Amazon machines. To determine an ideal stopping point, a script was written to test various iterations and the amount of error that they would achieve on our Amazon dataset of 250,000 nodes. We found that 15 iterations was the ideal value. This significantly sped up the PageRank time, since the graph is so large, and the error produced by this optimization was very small (4 minutes). This is probably due to the fact that for a degree heavy-tailed distribution, most of the nodes we will be calculating PageRank for are sparse, and would not contribute much to the top 20 rankings. We leave 15 iterations, however, to account for some convergence of the top 20 rankings (our last upload used 10 iterations, and we found that the error was too high). Even though there will be error present, the tradeoff between error and time significantly favors time minimization as the number iterations increases, since error rapidly decreases as more iterations are done.
 
-The result for this optimization was what allowed us to cross Milestone 1 and Milestone 2. For 15 iterations, our error was: $$1:30:11 + 0:04:00 = 1:34:11$$
+The result for this optimization was what allowed us to cross Milestone 1 and Milestone 2. For 15 iterations, our time was: $$1:30:11 + 0:04:00 = 1:34:11$$
 
 \section{Testing}
  % Can talk about data mining. What scripts we used. etc.
