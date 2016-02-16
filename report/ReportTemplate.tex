@@ -107,21 +107,107 @@ NodeId:[NODEID] \hspace{8mm} [CURRENT\_RANK],[PREVIOUS\_RANK],[ADJACENCY\_LIST]
     \end{itemize}
 
 \subsection*{Problems}
+  While the idea behind our initial framework was largly correct, we erred on one key point: We relied too much on sorting for things to actually work. That is, our implementation is not order invariant. This is seen both in Process\_Map and especially PageRank\_Map. Furthermore, though our implementation worked for Amazon testing and local testing, it wouldn't work for multi machine testing, simply because of the way we organized the key/value pairs. By having different key values for the same NodeId, we cannot confirm that all NodeId's would really be grouped up during the PageRank reduce step, which is the crucial step for PageRank calculations.
+  \\ \\
+  For example, the keys in the key/value pairs are in the format:
+  \begin{center}
+    [NODEID],[FLAG],[CURRENT\_RANK],[ITERATION].
+  \end{center}
+  We addressed above that the flag value changes whether or not the key/value pair is for an adjacency list or for a rank. Because of different flags for the same NodeId, the adjacency list might be stored on another machine while all the ranks are stored elsewhere. This will lead to incorrect calculations, since wrong adjacency lists might be used. So, to move from a single machine multiple machines, we needed to fix the key-value pairs to be in the correct format. The progress for that is listed in the section below.
 
 \section{Refactored Framework}
 \subsection*{Refactoring}
+Unlike the previous framework, our refactored code did not deal with previous ranks and separated NodeId operations with Iterations. So, the inputs to the PageRank Map functions were either:
+\begin{center}
+  NodeId:[NODEID] \hspace{8mm} [CURRENT\_RANK],[ADJACENCY\_LIST]
+\end{center}
+or
+\begin{center}
+  Iters \hspace{8mm} [ITERATIONS]
+\end{center}
+
+Like the previous section, we will detail the refactored bits in each of the four functions. we will talk about what the original problems were, and how the refactored code fixed it.
+\begin{itemize}
+  \item \textsc{PageRank\_Map}: \\
+    As mentioned above, the problem here was that we made a poor mapping choice. Originally, our key values were [NODEID],[FLAG],[CURRENT\_RANK],[ITERATION], but we wanted all of our key/value pairs to be blocked based on NODEID only. Therefore, the key value pairs were changed to:
+    \begin{center}
+      [NODEID] \hspace{8mm} [FLAG],[CURRENT\_RANK],[ADJACENCY\_LIST]
+    \end{center}
+    or
+    \begin{center}
+      [NEIGHBORID] \hspace{8mm} [FLAG],[NEIGHBOR\_RANK]
+    \end{center}
+    The first format of this key/value pair is if the [FLAG] is equal to ``Adj:''. This is pretty simple; we no longer include [ITERATIONS] and we just pass the [CURRENT\_RANK] and [FLAG] to the values part. The second format is similar; and this occurs when [FLAG] is equal to ``Rnk:''. However, so that this function becomes order invariant, we use a dictionary to store each [NEIGHBOR\_RANK] with the key being the [NEIGHBORID].
+    \\ \\
+    Since [ITERATIONS] was no longer part of the mapping, we dealt with [ITERATIONS] as an entirely separate key/value pair: 
+    \begin{center}
+      `Iters' \hspace{8mm} [ITERATIONS]
+    \end{center} 
+    We left it separate from the node calculations, and only decided to check iterations at the very end. So, if we received an iterations key/value pair, we just passed it along.
+  \item \textsc{PageRank\_Reduce}: \\
+    The problem with out old framework was that we relied too much on sorting, and we were naive of Hadoop's intricacies for grouping. This issue was essentially fixed once we moved the [FLAG] and the [CURRENT\_RANK] into values and left [ITERATIONS] to be its own thing. Furthermore, we also used dictionaries to store adjacency lists, with they key being the current node. This was later optimized to string buffers, which will be explained lower.
+    \\ \\
+    We did notice, however, that some datasets that we mined did not include NodeId entries for nodes that did not have any outgoing edges. The given datasets that were given did include entries for no outgoing edges, but according to Piazza, there may also be cases where no entries exist for such nodes. In this case, we would simply just create a new key/value pair with that NodeId, so we would be essentially adding an entry.
+    \\ \\
+    Just like PageRank Map, we do not deal with iterations here. We just pass them along.
+
+    The output for this function is simply:
+    \begin{center}
+      NodeId:[NODEID] \hspace{8mm} [CURRENT\_RANK],[ADJACENCY\_LIST]
+    \end{center}
+    or
+    \begin{center}
+      `Iters' \hspace{8mm} [ITERATIONS]
+    \end{center}
+
+  \item \textsc{Process\_Map}: \\
+    Initially, our process map and our process reduce were relatively similar.Furthermore, we only wanted to process our data once, so we moved all of the processing to process reduce (we had a huge bug where we assumed only one process map, which wasn't always true on Hadoop). So, this function is simply the identity function: it passes its input as its output.
+
+  \item \textsc{Process\_Reduce}: \\
+    This is the function that keeps track of the top 20 final rankings. This is also where the iteration key/value pairs are created or updated, incrementing the iteration number by 1 before passing it out. Like our initial process reduce, we would have a data structure holding the top 20 values, and the lowest rank gets replaced by higher ranks, and the data structure resorts itself.
+    \\ \\
+    Once the maximum number of iterations is hit, we simply print out Final Ranks.
+\end{itemize}
+After this implementation, the refactored code worked for both single instances and multiple machines. Our first 50 iteration run gave us a score of 4:55:XX or so, with 0 penalty. 
  % Talk about results in here too.
 
 \subsection*{Optimizations}
  % Talk about results in here too (15 iterations instead of 50)
  % (Low level stuff).
+During the development of our refactored code, to avoid order reliance, we would use dictionaries to store most of our data. For example, we would store adjacency lists in a dictionary, with the key being the NodeId for that dictionary. However, once we began to understand the intricacies of Hadoop more, we transitioned from using dictionaries to using string buffers, as dictionaries take up a lot of space (for such a large dataset). This optimized space and time as well, especially for such a large dataset.
+\\ \\
+Other low level optimizations included hardcoding alpha values and unraveling some of the for loops from the initial framework, so that there would be a slight speedup in running the code.
+\\ \\
+Perhaps the largest optimization that we did was to account for the tradeoff between time and error. We noticed that each iteration took about 6 minutes to complete on the Amazon machines, so through the process of trial and error, we decided to try 15 iterations. This significantly slowed down the PageRank time, since the graph is so large, and the error produced by this optimization was very small (6 minutes). This is probably due to the fact that for a degree heavy-tailed distribution, most of the nodes we will be calculating PageRank for are sparse, and would not contribute much to the top 20 rankings. We leave 15 iterations, however, to account for some convergence of the top 20 rankings (our last upload used 10 iterations, and we found that the error was too high). Even though there will be error present, the tradeoff between error and time significantly favors time minimization as the number iterations increases, since error rapidly decreases as more iterations are done.
+
+The result for this optimization was what allowed us to cross Milestone 1 and Milestone 2. For 15 iterations, our error was: $$1:30:11 + 0:04:00 = 1:34:11$$
 
 \section{Testing}
  % Can talk about data mining. What scripts we used. etc.
+ As mentioned above, one of the largest bugs that we found was that we did not account for Hadoop's intricacies in MapReduce. For our initial framework, we built a script (called ``script.py'') that would simulate the program on a single instance machine. The script would basically run
+ \begin{verbatim}
+ python pagerank_map.py | sort | python pagerank_reduce.py | sort | 
+ python process_map.py | sort | python process_reduce.py
+ \end{verbatim}
+ We were really confused initially since this script would produce the right result, and the Amazon testing also produced the right result. However, once we found out about the nature of Hadoop's multi-machine cluster, we wrote another script that was to simulate a multimachine PageRank simulation (called ``multiMap.py''). So, essentially, we wrote a MapReduce script that would simulate Hadoop. For the purposes of PageRank, we simulated 10 machines.
+ \\ \\
+ What this script did was to first create 10 text files for each of the pagerank functions (to simulate the 10 machines), 1 or 2 text files for process map, and 1 text file for process reduce (since map and reduce were said to be single instance). The script would first intake the maximum number of iterations, and also the data file that we would like to operate on. It would then parse the data file into the 10 separate text files, and in each file, each NodeId would represent a block. From there, it would conduct PageRank Map through each of the 10 files, populate the PageRank Reduce text files, conduct PageRank Reduce, populating the process map files, and etc.
+ \\ \\
+ By running this script on our initial framework, we immediately saw our problem with running on multiple machines; this script was a key part for our debugging.
+ \\ \\
+ We also took advantage of data mining. Our team looked through several datasets, and we tested our implementations not only on ``EmailEnron'' and ``GNPn100p05'', but also on datasets such as ``Wiki'', ``Facebook'' and ``Amazon''. These datasets gave us insight to edge cases we didn't consider from our local dataset (but that may have existed in the test dataset). One such example is the omission of any NodeId entry for nodes with no outgoing edges (this was found in ``Wiki'').
+ \\ \\
+ By running these scripts on all 5 of these datasets, and through constant local and Amazon testing, we believed that our implementations were correct. Like mentioned above, we used both single-instance ``script.py'' and multi machine ``multiMap.py'', and confirmed that both gave equal values for our local testing. For optimizations, such as optimizing the number of iterations, we usually conducted them locally and compared the rankings to the final rankings in assignment. 
 
 \section{Contributions}
+There are four members in this group: Kevin Chang, Timothy Chou, Albert Ge, and John Li. Here are each of their contributions:
+\begin{itemize}
+  \item \textsc{Kevin Chang}: Primary optimizer. Researched the framework of Hadoop to help debug and refactor our initial framework to working code. Aided in the refactoring of our initial framework to working code.
+  \item \textsc{Timothy Chou}: Refactored the initial framework to working code. Primary simulation and script writer for local testing. Implemented a local version of Hadoop through ``multiMap.py''.
+  \item \textsc{Albert Ge}: Primary developer of the initial framework for the Map Reduction. Researched and explored optimizations using Monte Carlo Random Walk simulations. Aided in writing the report.
+  \item
  % Should be on FB chat.
-
+ \end{itemize}
 \section{References}
 %\section{Overview}
 %In this section, please write an overview of the project. You should include the %work distribution of each team member, any challenges you encountered, and how you %overcame those challenges to achieve your final performance.
@@ -172,7 +258,7 @@ to the size of the graph.
     
 \item The second optimization that was attempted was also using a design pattern
 written in a paper by Lin and Schatz \cite{lin2010design}. In the paper, the authors
-describe a concept known as "Schimmy" to take advantage of the parallel mappers and reducers. 
+describe a concept known as ``Schimmy'' to take advantage of the parallel mappers and reducers. 
 This algorithm would partition the existing graph into the same number of partitions 
 as the number of reducers; thus, every reducer would only operate on the same nodes. 
 This would prevent the need to emit the entire graph structure within each iteration,
@@ -195,7 +281,7 @@ as the reducers would know which nodes to update.
 %\end{enumerate}
 \end{enumerate}
 
-\printbibilography
+\printbibliography
 
 %\section{Model Selection}
 %Describe the steps you took to pick your final model, such as cross-validation.
